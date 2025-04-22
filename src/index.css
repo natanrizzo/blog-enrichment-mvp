@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #fefefe;
+  --secondary: #333;
+  --secondary-border: rgba(3,3,3, .1);
+}
