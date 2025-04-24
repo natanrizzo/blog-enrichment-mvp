@@ -15,10 +15,10 @@ const typeElements: Record<NonNullable<TypographyProps["type"]>, ElementType> = 
 }
 
 const typeStyles: Record<NonNullable<TypographyProps["type"]>, string> = {
-    "title": "",
-    "subtitle": "",
-    "paragraph": "",
-    "caption": "",
+    "title": "font-bold text-2xl",
+    "subtitle": "font-bold text-xl",
+    "paragraph": "text-md",
+    "caption": "font-light text-sm",
 }
 
 const Typography = ({
@@ -28,11 +28,11 @@ const Typography = ({
     children,
 }: TypographyProps) => {
     const baseClassName = "";
- 
+    const typoClassName = typeStyles[type];
 
     const Typo = typeElements[type];
     const content = <Typo
-        className={className}
+        className={`${baseClassName} ${typoClassName} ${className}`}
     >
         { children }
     </Typo>

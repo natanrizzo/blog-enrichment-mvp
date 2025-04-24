@@ -3,5 +3,6 @@
 :root {
   --primary: #fefefe;
   --secondary: #333;
+  --button: #111;
   --secondary-border: rgba(3,3,3, .1);
 }
