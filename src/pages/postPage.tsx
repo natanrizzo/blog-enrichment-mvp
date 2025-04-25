@@ -1,11 +1,14 @@
+import Button from "@/components/button";
 import PostForm from "@/components/postForm";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function PostPage() {
     const { postId } = useParams();
-
+    const navigate = useNavigate();
+    
     return (
-        <div>
+        <div className="p-6">
+            <Button className="my-3" onClick={() => navigate(-1)} >{"< Posts"}</Button>
             <PostForm postId={Number(postId)} />
         </div>
     )

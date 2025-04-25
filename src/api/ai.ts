@@ -1,5 +1,5 @@
 import client from "./client";
 
-export function summarizeText(id: number, text: string) {
-    return client.post<{ prompt: string }>(`/posts/${id}/summarize`, { text });
+export function summarizeText(text: string) {
+    return client.post<{ prompt: string }>(`/posts/summarize`, { text });
 }

@@ -10,11 +10,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 import { summarizeText } from "@/api/ai"
-import { getOnePostById } from "@/api/posts"
-
+import { getOnePostById, updatePost } from "@/api/posts"
 
 interface BlogFormData {
-    id: number | null
+    id: number
     blog: number;
     externalId: string
     title: string
@@ -29,11 +28,9 @@ type PostFormProps = {
     postId: number
 }
 
-export default function PostForm({
-    postId
-}: PostFormProps) {
+export default function PostForm({ postId }: PostFormProps) {
     const [formData, setFormData] = useState<BlogFormData>({
-        id: null,
+        id: 0,
         blog: 0,
         externalId: "",
         title: "",
@@ -47,10 +44,20 @@ export default function PostForm({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [response, setResponse] = useState<any>(null)
 
+    const editor = useEditor({
+        extensions: [StarterKit],
+        content: "",
+        onUpdate: ({ editor }) => {
+            setFormData((prev) => ({
+                ...prev,
+                content: editor.getHTML(),
+            }))
+        },
+    })
+
     useEffect(() => {
-        getOnePostById(postId)
-        .then((post) => {
-            const postFormated: BlogFormData = {
+        getOnePostById(postId).then((post) => {
+            const postFormatted: BlogFormData = {
                 id: post.id,
                 title: post.title,
                 author: post.author,
@@ -61,42 +68,35 @@ export default function PostForm({
                 extraData: post.extraData,
                 publishedAt: post.publishedAt,
             }
-            setFormData(postFormated);
-        })
-    }, [])
+            setFormData(postFormatted)
 
-    const editor = useEditor({
-        extensions: [StarterKit],
-        content: formData.content,
-        onUpdate: ({ editor }) => {
-        setFormData((prev) => ({
-            ...prev,
-            content: editor.getHTML(),
-        }))
-        },
-    })
+            if (editor) {
+                editor.commands.setContent(postFormatted.content)
+            }
+        })
+    }, [postId, editor])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
 
         setFormData((prev) => ({
-        ...prev,
-        [name]: value,
+            ...prev,
+            [name]: value,
         }))
     }
 
     const handleExtraDataChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         try {
-        const parsedJson = e.target.value ? JSON.parse(e.target.value) : {}
-        setFormData((prev) => ({
-            ...prev,
-            extraData: parsedJson,
-        }))
-        } catch (error) {
-        setFormData((prev) => ({
-            ...prev,
-            extraData: e.target.value,
-        }))
+            const parsedJson = e.target.value ? JSON.parse(e.target.value) : {}
+            setFormData((prev) => ({
+                ...prev,
+                extraData: parsedJson,
+            }))
+        } catch {
+            setFormData((prev) => ({
+                ...prev,
+                extraData: e.target.value,
+            }))
         }
     }
 
@@ -105,50 +105,42 @@ export default function PostForm({
         setIsSubmitting(true)
 
         try {
-        const response = await fetch("/api/blog", {
-            method: "POST",
-            headers: {
-            "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-        })
+            const response = await updatePost(postId, {
+                id: formData.id,
+                blogId: formData.blog,
+                externalId: formData.externalId,
+                title: formData.title,
+                content: formData.content,
+                author: formData.author,
+                publishedAt: formData.publishedAt,
+                extraData: formData.extraData,
+                creationDate: formData.createdAt,
+            })
 
-        const data = await response.json()
-        setResponse(data)
+            setResponse(response)
 
-        if (response.ok && data.id) {
-            setFormData((prev) => ({
-            ...prev,
-            id: data.id,
-            }))
-        }
-        } catch (error) {
-        setResponse({ error: "Failed to submit form. Please try again." })
+            if (response?.id) {
+                setFormData((prev) => ({
+                    ...prev,
+                    id: response.id,
+                }))
+            }
+        } catch {
+            setResponse({ error: "Failed to submit form. Please try again." })
         } finally {
-        setIsSubmitting(false)
+            setIsSubmitting(false)
         }
     }
 
     const handleAiResume = async () => {
         setIsSubmitting(true)
-
         try {
-        const response = await summarizeText(postId, JSON.stringify(formData))
-
-        const data = await response;
-
-        if (data) {
-            setResponse({
-            summarizedText: data,
-        })
-
-        if (editor) {
-        editor.commands.setContent(data)
-        }
-        } else {
-            setResponse(data)
-        }
-        } catch (error) {
+            const response = await summarizeText(JSON.stringify(formData.content))
+            console.log(response);
+            if (response) {
+                setResponse(response.data);
+            }
+        } catch(err) {
             setResponse({ error: "Failed to generate AI resume. Please try again." })
         } finally {
             setIsSubmitting(false)
@@ -157,132 +149,101 @@ export default function PostForm({
 
     return (
         <Card className="w-full">
-        <CardHeader>
-            <CardTitle>Blog Entry</CardTitle>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="id">ID (Auto-generated)</Label>
-                <Input id="id" name="id" value={formData.id || ""} disabled placeholder="Auto-generated" />
-            </div>
+            <CardHeader>
+                <CardTitle>Blog Entry</CardTitle>
+            </CardHeader>
+            <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="id">ID</Label>
+                        <Input id="id" name="id" value={formData.id || ""} disabled />
+                    </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="blog">Blog Reference</Label>
-                <Input
-                id="blog"
-                name="blog"
-                value={formData.blog ? `${formData.blog}` : ""}
-                disabled
-                placeholder="Blog reference"
-                onChange={handleChange}
-                />
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="blog">Blog ID</Label>
+                        <Input id="blog" name="blog" value={formData.blog || ""} onChange={handleChange} />
+                    </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="externalId">External ID</Label>
-                <Input
-                id="externalId"
-                name="externalId"
-                value={formData.externalId}
-                disabled
-                placeholder="External ID"
-                />
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="externalId">External ID</Label>
+                        <Input id="externalId" name="externalId" value={formData.externalId} onChange={handleChange} />
+                    </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" name="title" value={formData.title} onChange={handleChange} placeholder="Enter title" />
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input id="title" name="title" value={formData.title} onChange={handleChange} />
+                    </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="content">Content</Label>
-                <div className="border rounded-md p-2 min-h-[200px] bg-background">
-                <EditorContent editor={editor} />
-                </div>
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="content">Content</Label>
+                        <div className="border rounded-md p-2 min-h-[200px] bg-background">
+                            <EditorContent editor={editor} />
+                        </div>
+                    </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="author">Author</Label>
-                <Input id="author" name="author" value={formData.author} disabled placeholder="Author (from backend)" />
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="author">Author</Label>
+                        <Input id="author" name="author" value={formData.author} onChange={handleChange} />
+                    </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="publishedAt">Published At</Label>
-                <Input
-                id="publishedAt"
-                name="publishedAt"
-                type="datetime-local"
-                value={formData.publishedAt ? formData.publishedAt.slice(0, 16) : ""}
-                disabled
-                />
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="publishedAt">Published At</Label>
+                        <Input
+                            id="publishedAt"
+                            name="publishedAt"
+                            type="datetime-local"
+                            value={formData.publishedAt?.slice(0, 16)}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="extraData">Extra Data (JSON)</Label>
-                <Textarea
-                id="extraData"
-                name="extraData"
-                value={
-                    typeof formData.extraData === "object"
-                    ? JSON.stringify(formData.extraData, null, 2)
-                    : formData.extraData
-                }
-                onChange={handleExtraDataChange}
-                placeholder="{ }"
-                rows={4}
-                />
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="extraData">Extra Data (JSON)</Label>
+                        <Textarea
+                            id="extraData"
+                            name="extraData"
+                            value={typeof formData.extraData === "object"
+                                ? JSON.stringify(formData.extraData, null, 2)
+                                : formData.extraData}
+                            onChange={handleExtraDataChange}
+                            rows={4}
+                        />
+                    </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="createdAt">Created At</Label>
-                <Input
-                id="createdAt"
-                name="createdAt"
-                type="datetime-local"
-                value={formData.createdAt ? formData.createdAt.slice(0, 16) : ""}
-                disabled
-                />
-            </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="createdAt">Created At</Label>
+                        <Input
+                            id="createdAt"
+                            name="createdAt"
+                            type="datetime-local"
+                            value={formData.createdAt?.slice(0, 16)}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-            {response && (
-                <div className="mt-6 p-4 border rounded-md bg-muted">
-                <h3 className="font-medium mb-2">AI Summary:</h3>
-                {response.summarizedText ? (
-                    <div className="prose prose-sm max-w-none">{response.summarizedText}</div>
-                ) : response.error ? (
-                    <div className="text-destructive">{response.error}</div>
-                ) : (
-                    <pre className="whitespace-pre-wrap text-sm">{JSON.stringify(response, null, 2)}</pre>
-                )}
-                </div>
-            )}
-            </CardContent>
+                    {response && (
+                        <div className="mt-6 p-4 border rounded-md bg-muted">
+                            <h3 className="font-medium mb-2">AI Summary:</h3>
+                            {response.summarizedText ? (
+                                <div className="prose prose-sm max-w-none">{response.summarizedText}</div>
+                            ) : response.error ? (
+                                <div className="text-destructive">{response.error}</div>
+                            ) : (
+                                <pre className="whitespace-pre-wrap text-sm">{JSON.stringify(response, null, 2)}</pre>
+                            )}
+                        </div>
+                    )}
+                </CardContent>
 
-            <CardFooter className="flex flex-col sm:flex-row gap-4">
-            <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting
-                </>
-                ) : (
-                "Submit"
-                )}
-            </Button>
-
-            <Button type="button" variant="secondary" onClick={handleAiResume} disabled={isSubmitting}>
-                {isSubmitting ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing
-                </>
-                ) : (
-                "AI Resume"
-                )}
-            </Button>
-            </CardFooter>
-        </form>
+                <CardFooter className="flex flex-col sm:flex-row gap-4">
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting</> : "Submit"}
+                    </Button>
+                    <Button type="button" variant="secondary" onClick={handleAiResume} disabled={isSubmitting}>
+                        {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing</> : "AI Resume"}
+                    </Button>
+                </CardFooter>
+            </form>
         </Card>
     )
 }
