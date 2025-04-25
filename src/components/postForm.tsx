@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 
 import { useState, useEffect } from "react"
@@ -14,7 +12,7 @@ import { Loader2 } from "lucide-react"
 import { summarizeText } from "@/api/ai"
 import { getOnePostById } from "@/api/posts"
 
-// Define the form field types
+
 interface BlogFormData {
     id: number | null
     blog: number;
@@ -28,29 +26,39 @@ interface BlogFormData {
 }
 
 export default function PostForm(postId: number) {
-    // Initial form state
     const [formData, setFormData] = useState<BlogFormData>({
-        id: null, // Auto-incrementing, will be set by backend
-        blog: 0, // Immutable after creation
+        id: null,
+        blog: 0,
         externalId: "",
         title: "",
         content: "",
         author: "",
-        publishedAt: "", // Immutable after creation
+        publishedAt: "",
         extraData: {},
-        createdAt: "", // Defaults to now(), immutable
+        createdAt: "",
     })    
 
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [response, setResponse] = useState<any>(null)
-    const [isNewEntry, setIsNewEntry] = useState(true)
 
     useEffect(() => {
         getOnePostById(postId)
-        .then(setFormData) // Adjust
+        .then((post) => {
+            const postFormated: BlogFormData = {
+                id: post.id,
+                title: post.title,
+                author: post.author,
+                blog: post.blogId,
+                content: post.content,
+                createdAt: post.creationDate,
+                externalId: post.externalId,
+                extraData: post.extraData,
+                publishedAt: post.publishedAt,
+            }
+            setFormData(postFormated);
+        })
     }, [])
 
-    // Initialize TipTap editor
     const editor = useEditor({
         extensions: [StarterKit],
         content: formData.content,
@@ -62,26 +70,8 @@ export default function PostForm(postId: number) {
         },
     })
 
-    // Set default dates for new entries
-    useEffect(() => {
-        if (isNewEntry) {
-        const now = new Date().toISOString()
-        setFormData((prev) => ({
-            ...prev,
-            publishedAt: now,
-            createdAt: now,
-        }))
-        }
-    }, [isNewEntry])
-
-    // Handle form input changes
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target
-
-        // Don't allow changes to immutable fields if not a new entry
-        if (!isNewEntry && ["blog", "author", "publishedAt", "createdAt"].includes(name)) {
-        return
-        }
 
         setFormData((prev) => ({
         ...prev,
@@ -89,7 +79,6 @@ export default function PostForm(postId: number) {
         }))
     }
 
-    // Handle extra data as JSON
     const handleExtraDataChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         try {
         const parsedJson = e.target.value ? JSON.parse(e.target.value) : {}
@@ -98,7 +87,6 @@ export default function PostForm(postId: number) {
             extraData: parsedJson,
         }))
         } catch (error) {
-        // If JSON is invalid, store as string to be validated later
         setFormData((prev) => ({
             ...prev,
             extraData: e.target.value,
@@ -106,13 +94,11 @@ export default function PostForm(postId: number) {
         }
     }
 
-    // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsSubmitting(true)
 
         try {
-        // In a real app, replace with your actual API endpoint
         const response = await fetch("/api/blog", {
             method: "POST",
             headers: {
@@ -125,8 +111,6 @@ export default function PostForm(postId: number) {
         setResponse(data)
 
         if (response.ok && data.id) {
-            // If successful and we get an ID back, it's no longer a new entry
-            setIsNewEntry(false)
             setFormData((prev) => ({
             ...prev,
             id: data.id,
@@ -139,23 +123,19 @@ export default function PostForm(postId: number) {
         }
     }
 
-    // Handle AI Resume button click
     const handleAiResume = async () => {
         setIsSubmitting(true)
 
         try {
-        // In a real app, replace with your actual AI API endpoint
         const response = await summarizeText(JSON.stringify(formData))
 
         const data = await response;
 
-        // Display the summarized text as the response
         if (data) {
             setResponse({
             summarizedText: data,
             })
 
-            // Update the content field with the summarized text if needed
             if (editor) {
             editor.commands.setContent(data)
             }
@@ -163,9 +143,9 @@ export default function PostForm(postId: number) {
             setResponse(data)
         }
         } catch (error) {
-        setResponse({ error: "Failed to generate AI resume. Please try again." })
+            setResponse({ error: "Failed to generate AI resume. Please try again." })
         } finally {
-        setIsSubmitting(false)
+            setIsSubmitting(false)
         }
     }
 
@@ -176,27 +156,23 @@ export default function PostForm(postId: number) {
         </CardHeader>
         <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-            {/* ID field - read only */}
             <div className="space-y-2">
                 <Label htmlFor="id">ID (Auto-generated)</Label>
                 <Input id="id" name="id" value={formData.id || ""} disabled placeholder="Auto-generated" />
             </div>
 
-            {/* Blog reference field - immutable after creation */}
             <div className="space-y-2">
                 <Label htmlFor="blog">Blog Reference</Label>
                 <Input
                 id="blog"
                 name="blog"
                 value={formData.blog ? `${formData.blog}` : ""}
-                disabled={!isNewEntry}
+                disabled
                 placeholder="Blog reference"
                 onChange={handleChange}
                 />
-                <p className="text-sm text-muted-foreground">Immutable after creation</p>
             </div>
 
-            {/* External ID field - read-only */}
             <div className="space-y-2">
                 <Label htmlFor="externalId">External ID</Label>
                 <Input
@@ -204,18 +180,15 @@ export default function PostForm(postId: number) {
                 name="externalId"
                 value={formData.externalId}
                 disabled
-                placeholder="External ID (from backend)"
+                placeholder="External ID"
                 />
-                <p className="text-sm text-muted-foreground">Provided by backend</p>
             </div>
 
-            {/* Title field */}
             <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
                 <Input id="title" name="title" value={formData.title} onChange={handleChange} placeholder="Enter title" />
             </div>
 
-            {/* Content field with WYSIWYG editor */}
             <div className="space-y-2">
                 <Label htmlFor="content">Content</Label>
                 <div className="border rounded-md p-2 min-h-[200px] bg-background">
@@ -223,14 +196,11 @@ export default function PostForm(postId: number) {
                 </div>
             </div>
 
-            {/* Author field - read-only */}
             <div className="space-y-2">
                 <Label htmlFor="author">Author</Label>
                 <Input id="author" name="author" value={formData.author} disabled placeholder="Author (from backend)" />
-                <p className="text-sm text-muted-foreground">Provided by backend</p>
             </div>
 
-            {/* Published At field - read-only */}
             <div className="space-y-2">
                 <Label htmlFor="publishedAt">Published At</Label>
                 <Input
@@ -240,10 +210,8 @@ export default function PostForm(postId: number) {
                 value={formData.publishedAt ? formData.publishedAt.slice(0, 16) : ""}
                 disabled
                 />
-                <p className="text-sm text-muted-foreground">Provided by backend</p>
             </div>
 
-            {/* Extra Data field (JSON) */}
             <div className="space-y-2">
                 <Label htmlFor="extraData">Extra Data (JSON)</Label>
                 <Textarea
@@ -260,7 +228,6 @@ export default function PostForm(postId: number) {
                 />
             </div>
 
-            {/* Created At field - immutable */}
             <div className="space-y-2">
                 <Label htmlFor="createdAt">Created At</Label>
                 <Input
@@ -270,10 +237,8 @@ export default function PostForm(postId: number) {
                 value={formData.createdAt ? formData.createdAt.slice(0, 16) : ""}
                 disabled
                 />
-                <p className="text-sm text-muted-foreground">Automatically set to current time</p>
             </div>
 
-            {/* Response display area */}
             {response && (
                 <div className="mt-6 p-4 border rounded-md bg-muted">
                 <h3 className="font-medium mb-2">AI Summary:</h3>

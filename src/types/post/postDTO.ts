@@ -1,7 +1,7 @@
 export default class PostDTO {
     id: number;
     blogId: number;
-    externalId: number;
+    externalId: string;
     author: string;
     content: string;
     creationDate: string;
