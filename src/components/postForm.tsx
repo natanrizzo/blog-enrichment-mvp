@@ -25,7 +25,13 @@ interface BlogFormData {
     createdAt: string
 }
 
-export default function PostForm(postId: number) {
+type PostFormProps = {
+    postId: number
+}
+
+export default function PostForm({
+    postId
+}: PostFormProps) {
     const [formData, setFormData] = useState<BlogFormData>({
         id: null,
         blog: 0,
@@ -127,18 +133,18 @@ export default function PostForm(postId: number) {
         setIsSubmitting(true)
 
         try {
-        const response = await summarizeText(JSON.stringify(formData))
+        const response = await summarizeText(postId, JSON.stringify(formData))
 
         const data = await response;
 
         if (data) {
             setResponse({
             summarizedText: data,
-            })
+        })
 
-            if (editor) {
-            editor.commands.setContent(data)
-            }
+        if (editor) {
+        editor.commands.setContent(data)
+        }
         } else {
             setResponse(data)
         }
