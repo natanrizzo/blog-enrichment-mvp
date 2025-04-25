@@ -6,7 +6,7 @@ export const getAllPosts = async (): Promise<PostDTO[]> => {
     return res.data;
 }
 
-export const getOnePostById = async (postId: number): Promise<PostDTO> => {
-    const res = await client.get(`/posts/${postId}`);
+export const getOnePostById = async (id: number): Promise<PostDTO> => {
+    const res = await client.get(`/posts/${id}`);
     return res.data;
 }

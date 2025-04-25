@@ -2,10 +2,8 @@ import { getAllPosts } from "@/api/posts";
 import Card from "@/components/card";
 import PostDTO from "@/types/post/postDTO";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
-    const navigate = useNavigate();
     const [posts, setPosts] = useState<PostDTO[]>([]);
     
     useEffect(() => {
@@ -14,20 +12,20 @@ export default function HomePage() {
     }, []);
 
     return (
-        <div>
-           {
+        <div className="grid grid-cols-1 gap-6 p-12 md:grid-cols-2 lg:grid-cols-3">
+        {
             posts.map(p => (
                 <Card
                     key={p.id}
                     author={p.author}
-                    href={p.id.toString()}
+                    href={`posts/${p.id.toString()}`}
                     creationDate={p.creationDate}
                     publishDate={p.publishedAt}
                     text={p.content}
                     title={p.title}
                 />
             ))
-           } 
+        } 
         </div>
     )
 }

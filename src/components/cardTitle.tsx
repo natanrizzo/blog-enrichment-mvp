@@ -8,7 +8,7 @@ const CardTitle = ({
     title,
 }: CardTitleProps) => {
     return (
-        <div className="bg-[var(--primary)] p-4 border-b-1 border-[var(--secondary-border)]">
+        <div className="bg-[var(--card)] p-4 border-b-1 border-[var(--secondary-border)]">
             <Typography type="title">{title}</Typography>
         </div>
     )

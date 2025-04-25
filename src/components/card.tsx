@@ -21,7 +21,7 @@ const Card = ({
     creationDate,
     publishDate,
 }: CardProps) => {
-    const baseClassname = "bg-[var(--primary)] rounded-md transition-all shadow-sm duration-300 hover:shadow-md";
+    const baseClassname = "bg-[var(--card)] rounded-md transition-all shadow-sm duration-300 hover:shadow-md";
     const cardClassname = `${baseClassname} ${className}`;
 
     return (
