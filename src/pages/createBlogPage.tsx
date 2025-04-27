@@ -1,15 +1,14 @@
+import BlogForm from "@/components/blogForm";
 import Button from "@/components/button";
-import PostForm from "@/components/postForm";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-export default function PostPage() {
-    const { postId } = useParams();
+export default function CreateBlogPage() {
     const navigate = useNavigate();
     
     return (
         <div className="p-6">
             <Button className="my-3" onClick={() => navigate(-1)} >{"< Back"}</Button>
-            <PostForm postId={Number(postId)} />
+            <BlogForm mode="create" />
         </div>
     )
 }

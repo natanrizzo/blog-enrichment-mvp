@@ -8,4 +8,7 @@ export default class PostDTO {
     publishedAt: string;
     title: string;
     extraData: string;
+    blog?: {
+        baseUrl: string;
+    }
 }

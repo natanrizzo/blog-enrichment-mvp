@@ -135,8 +135,7 @@ export default function PostForm({ postId }: PostFormProps) {
     const handleAiResume = async () => {
         setIsSubmitting(true)
         try {
-            const response = await summarizeText(JSON.stringify(formData.content))
-            console.log(response);
+            const response = await summarizeText(formData.content)
             if (response) {
                 setResponse(response.data);
             }
@@ -161,12 +160,12 @@ export default function PostForm({ postId }: PostFormProps) {
 
                     <div className="space-y-2">
                         <Label htmlFor="blog">Blog ID</Label>
-                        <Input id="blog" name="blog" value={formData.blog || ""} onChange={handleChange} />
+                        <Input id="blog" name="blog" value={formData.blog || ""} disabled onChange={handleChange} />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="externalId">External ID</Label>
-                        <Input id="externalId" name="externalId" value={formData.externalId} onChange={handleChange} />
+                        <Input id="externalId" name="externalId" value={formData.externalId} disabled onChange={handleChange} />
                     </div>
 
                     <div className="space-y-2">
@@ -183,7 +182,7 @@ export default function PostForm({ postId }: PostFormProps) {
 
                     <div className="space-y-2">
                         <Label htmlFor="author">Author</Label>
-                        <Input id="author" name="author" value={formData.author} onChange={handleChange} />
+                        <Input id="author" name="author" value={formData.author} disabled onChange={handleChange} />
                     </div>
 
                     <div className="space-y-2">
@@ -192,6 +191,7 @@ export default function PostForm({ postId }: PostFormProps) {
                             id="publishedAt"
                             name="publishedAt"
                             type="datetime-local"
+                            disabled
                             value={formData.publishedAt?.slice(0, 16)}
                             onChange={handleChange}
                         />
@@ -215,6 +215,7 @@ export default function PostForm({ postId }: PostFormProps) {
                         <Input
                             id="createdAt"
                             name="createdAt"
+                            disabled
                             type="datetime-local"
                             value={formData.createdAt?.slice(0, 16)}
                             onChange={handleChange}
@@ -229,7 +230,7 @@ export default function PostForm({ postId }: PostFormProps) {
                             ) : response.error ? (
                                 <div className="text-destructive">{response.error}</div>
                             ) : (
-                                <pre className="whitespace-pre-wrap text-sm">{JSON.stringify(response, null, 2)}</pre>
+                                <pre className="whitespace-pre-wrap text-sm">{response}</pre>
                             )}
                         </div>
                     )}

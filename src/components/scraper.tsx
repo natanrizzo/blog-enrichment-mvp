@@ -58,7 +58,7 @@ export default function Scraper() {
         setIsSubmitting(true)
 
         try {
-            const response = await scrapBlog(JSON.stringify(formData.url), JSON.stringify(formData.platform));
+            const response = await scrapBlog(formData.url, formData.platform);
             const data = await response.json();
             setResponse(data)
         } catch (error) {

@@ -6,6 +6,7 @@ type CardProps = {
     className?: string;
     href: string;
     title: string;
+    blog?: string
     author: string;
     text: string;
     creationDate: string;
@@ -16,6 +17,7 @@ const Card = ({
     className,
     href,
     title,
+    blog,
     author,
     text,
     creationDate,
@@ -26,7 +28,7 @@ const Card = ({
 
     return (
         <div className={cardClassname}>
-            <CardTitle title={title} />
+            <CardTitle title={title} blog={blog} />
             <CardContent text={text} />
             <CardFooter
                 href={href}
