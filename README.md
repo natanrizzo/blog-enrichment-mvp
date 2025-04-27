@@ -60,7 +60,7 @@ Here are the available commands you can run:
   npm run dev
 ```
 
-This command will start the development server at [http://localhost:3000](http://localhost:3000).
+This command will start the development server at [http://localhost:5173](http://localhost:5173).
 
 ## Usage
 
@@ -87,7 +87,7 @@ To run the app in development mode:
 ```
 
 
-This will start the Vite development server, accessible at [http://localhost:3000](http://localhost:3000).
+This will start the Vite development server, accessible at [http://localhost:5173](http://localhost:5173).
 
 ## Build
 
