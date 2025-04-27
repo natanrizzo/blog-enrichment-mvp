@@ -1,5 +1,5 @@
 import client from "./client";
 
-export function summarizeText(text: string) {
-    return client.post<{ prompt: string }>(`/posts/summarize`, { text });
+export function summarizeText(model: string, text: string) {
+    return client.post<{ prompt: string }>(`/posts/summarize`, { model, text });
 }

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 import { summarizeText } from "@/api/ai"
 import { getOnePostById, updatePost } from "@/api/posts"
+import AiSelector from "./aiSelector"
 
 interface BlogFormData {
     id: number
@@ -39,10 +40,11 @@ export default function PostForm({ postId }: PostFormProps) {
         publishedAt: "",
         extraData: {},
         createdAt: "",
-    })    
+    });
 
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [response, setResponse] = useState<any>(null)
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [response, setResponse] = useState<any>(null);
+    const [selectedAi, setSelectedAi] = useState("deepseek");
 
     const editor = useEditor({
         extensions: [StarterKit],
@@ -135,7 +137,7 @@ export default function PostForm({ postId }: PostFormProps) {
     const handleAiResume = async () => {
         setIsSubmitting(true)
         try {
-            const response = await summarizeText(formData.content)
+            const response = await summarizeText(selectedAi, formData.content)
             if (response) {
                 setResponse(response.data);
             }
@@ -235,7 +237,9 @@ export default function PostForm({ postId }: PostFormProps) {
                         </div>
                     )}
                 </CardContent>
-
+                
+                <AiSelector selectedAi={selectedAi} setSelectedAi={setSelectedAi} />
+            
                 <CardFooter className="flex flex-col sm:flex-row gap-4">
                     <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting</> : "Submit"}
